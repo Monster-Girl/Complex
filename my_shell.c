@@ -46,25 +46,7 @@ int main()
 		pid_t id=fork();
 		if(id==0)
 		{
-			int j=0;
-			int fd;
-			for(j=0;j<=i;j++)
-			{
-
-
-				if(strcmp(_argv[j],">")==0)
-				{
 			
-					char* file=_argv[j+1];
-				
-					_argv[j]=NULL;
-					close(1);
-					fd=open(file,O_WRONLY|O_CREAT ,0666);
-				
-					break;
-
-				}
-			}
 			execvp(_argv[0],_argv);
 			exit(1);
 		}
