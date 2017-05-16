@@ -15,9 +15,11 @@ int main()
 			sendMsg(msgid,SERVER_TYPE,buf);
 		}
 
-		recvMsg(msgid,CLIENT_TYPE,buf);
+		if(recvMsg(msgid,CLIENT_TYPE,buf)<0)
+			break;
 		printf("client # %s\n",buf);
 	}
+//	destoryMsg(msgid);
 	return 0;
 }
 

@@ -10,13 +10,13 @@
 #include<sys/msg.h>
 
 #define PATHNAME "."
-#define PROIJ_ID 0666
+#define PROJ_ID 0666
 #define SERVER_TYPE 1
 #define CLIENT_TYPE 2
 
 struct Msgbuf
 {
-	long mtype;
+	int mtype;
 	char mtext[1024];
 };
 

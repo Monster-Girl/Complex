@@ -2,7 +2,7 @@
 
 static int Msg(int msgflg)
 {
-	key_t _key=ftok(PATHNAME,PROIJ_ID);
+	key_t _key=ftok(PATHNAME,0);
 	if(_key<0)
 	{
 		perror("ftok");
@@ -20,7 +20,7 @@ static int Msg(int msgflg)
 
 int creatMsg()
 {
-	return Msg(IPC_CREAT|IPC_EXCL|PROIJ_ID);
+	return Msg(IPC_CREAT|IPC_EXCL|0666);
 }
 
 int getMsgQueue()
@@ -54,7 +54,7 @@ int sendMsg(int msgid,int who,char* msg)
 int recvMsg(int msgid,int MsgType,char out[])
 {
 	struct Msgbuf buf;
-	if(msgrcv(msgid,(void*)&buf,sizeof(buf),MsgType,0)<0)
+	if(msgrcv(msgid,(void*)&buf,sizeof(buf.mtext),MsgType,0)<0)
 	{
 		perror("msgrcv");
 		return -1;
