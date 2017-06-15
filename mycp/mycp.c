@@ -59,5 +59,7 @@ int main()
 	pthread_join(productor,NULL);
 	pthread_join(consume,NULL);
 
+	sem_destroy(&blacksem);
+	sem_destroy(&datasem);
 	return 0;
 }
