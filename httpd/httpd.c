@@ -125,5 +125,120 @@ static void drop_header(int sock)
 	}while(ret>0 && strcmp(line,"\n"));
 }
 
-static int exe_cgi(int sock,char)
+static int exe_cgi(int sock,char *method,char *path,char *query_string)
+{
+	int content_len=-1;
+	if(trcasecmp(method,"GET")==0)
+	{
+		drop_header(sock);
+	}
+	else   //POST
+	{
+		char line[1024];
+		int ret=-1;
+		do{
+			ret=get_line(sock,line,sizeof(line));
+			if()(ret>0) && \
+				strncasecmp(line,"Content-Length: ",16)==0)
+				{
+					content_len=atoi(&line[16]);
+				}
+		}while(ret>0 && strcmp(line,'\n'));
+		if(content_len==-1)
+		{
+			echo_string(sock);
+			return 10;
+		}
+	}
+
+	pid_t id=fork();
+	if(id<0)
+	{
+		echo_string(sock);
+		return 11;
+	}
+	else if(id==0)   //child
+	{
+		execl(path,path,NULL);
+		exit(1);
+	}
+	else
+	{
+		int ret=waitpid(id,NULL,0);
+	}
+}
+
+//thread
+void *handler_quest(void* arg)
+{
+	int sock=(int*)arg;
+#ifdef DEBUG
+	char line[1024];
+	do{
+		int ret=get_line(sock,line,sizeof(line));
+		if(ret>0)
+		{
+			printf("%s",line);
+		}
+		else
+		{
+			printf("request done...\n");
+			break;
+		}
+	}while(1);
+
+#else
+
+	int ret=0;
+	char buf[SIZE];
+	char method[SIZE/10];
+	char url[SIZE];
+	char path[SIZE];
+	int i=0;  //method 
+	int j=0;  //buf
+	int cgi=0;
+	char *query_string=NULL;
+
+	if(get_line(sock,buf,sizeof(buf))<=0)
+	{
+		echo_string(sock);
+		ret=5;
+		goto end;
+	}
+
+	while(!isspace(buf[j]) && j<sizeof(buf) \
+			&& i<sizeof(method)-1)
+	{
+		method[i]=buf[j];
+		i++;
+		j++;
+	}
+
+	method[i]='\0';
+	if(strcasecmp(method,"GET") && strcasecmp(buf,"POST"))
+	{
+		echo_string(sock);
+		ret=6;
+		goto end;
+	}
+	
+	if(strcasecmp(method,"POST")==0)
+	{
+		cgi=1;
+	}
+
+	while(isspace(buf[j])&& j<sizeof(buf)) //"GET    /   http/1.0"
+	{
+		j++;
+	}
+
+	i=0;
+	while(!isspace(buf[j])&& j<sizeof(buf) && i<sizeof(url)-1)
+	{
+		url[i]=buf[j];
+		i++;
+		j++;
+	}
+	url[i]='\0';
+}
 
