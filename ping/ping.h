@@ -15,14 +15,31 @@
 #include<sys/socket.h>
 #include<unistd.h>
 #include<sys/time.h>
+#include<arpa/inet.h>
+#include<netdb.h>
+#include<netinet/in.h>  
+#include<netinet/ip.h>
+#include<pthread.h>
+#include<string.h>
+#include<signal.h>
 
+struct sockaddr_in dst_addr;
+struct sockaddr_in recv_addr;
+struct timeval recv_time;
+char icmp_pkt[1024]={0};
+char recv_pkt[1024]={0};
 
-void PackIcmp(int seq);
-void SendPacket(int sock_icmp,struct sockaddr_in *remote,int num_send);
-void RecevePacket(int sock_icmp,struct *local);
-void PackIcmp();
-int Unpack(struct timeval *ReveceTime);
+int sockfd=0;
+int bytes=56;
+int nsend_pkt=0;
+int nrecv_pkt=0;
+pid_t pid;
 
-double GetTime()
+void statistics();
+int in_chksum(unsigned short *buf,int size);
+double GetRtt(struct timeval *last,struct timeval *first);
+int unpack(char *recv_pkt,int size);
+void SendPacket();
+void RecevePacket();
 
 #endif

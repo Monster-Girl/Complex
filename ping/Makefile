@@ -1,7 +1,5 @@
 main:main.c ping.c
-	gcc -o $@ $^
-ping:ping.c ping.h
-	gcc -o $@ $^
+	gcc -o $@ $^ -lpthread
 .PHONY:clean
 clean:
 	rm main
