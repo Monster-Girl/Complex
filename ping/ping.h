@@ -26,13 +26,13 @@
 struct sockaddr_in dst_addr;
 struct sockaddr_in recv_addr;
 struct timeval recv_time;
-char icmp_pkt[1024]={0};
-char recv_pkt[1024]={0};
+static char icmp_pkt[1024]={0};
+static char recv_pkt[1024]={0};
 
-int sockfd=0;
-int bytes=56;
-int nsend_pkt=0;
-int nrecv_pkt=0;
+static int sockfd;
+static int bytes=56;
+static int nsend_pkt=0;
+static int nrecv_pkt=0;
 pid_t pid;
 
 void statistics();

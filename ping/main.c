@@ -35,8 +35,9 @@ int main(int argc,char *argv[])
 	}
 
 	setsockopt(sockfd,SOL_SOCKET,SO_RCVBUF,&size,sizeof(size));  //确定缓冲区大小
-	setsockopt(sockfd,IPPROTO_IP,IP_MULTICAST_TTL,&ttl,sizeof(ttl));
-	setsockopt(sockfd,IPPROTO_IP,IP_TTL,&ttl,sizeof(ttl));
+	//setsockopt(sockfd,IPPROTO_IP,IP_MULTICAST_TTL,&ttl,sizeof(ttl));
+	//setsockopt(sockfd,IPPROTO_IP,IP_TTL,&ttl,sizeof(ttl));
+
 
 	memset(&dst_addr,0,sizeof(dst_addr));
 	dst_addr.sin_family=AF_INET;
@@ -61,12 +62,23 @@ int main(int argc,char *argv[])
 			inet_ntoa(dst_addr.sin_addr),bytes);
 	signal(SIGINT,statistics);
 
+	printf("socket:%d",sockfd);
 	name=pthread_create(&send_id,NULL,(void*)SendPacket,NULL);
+	printf("sock:%d\n",sockfd);
 	if(name!=0)
 	{
-		perror("pthread_create");
+		perror("pthread_create :send");
 		return 5;
 	}
-	pthread_join(send_id,0);
-	pthread_join(recv_id,0);
+
+	name=pthread_create(&recv_id,NULL,(void*)RecevePacket,NULL);
+	if(name!=0)
+	{
+		perror("pthread_create :recv");
+		return 6;
+	}
+	pthread_join(send_id,NULL);
+	pthread_join(recv_id,NULL);
+	
+	return 0;
 }

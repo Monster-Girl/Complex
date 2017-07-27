@@ -1,4 +1,4 @@
-main:main.c ping.c
+main:ping.c
 	gcc -o $@ $^ -lpthread
 .PHONY:clean
 clean:
