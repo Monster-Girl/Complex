@@ -4,65 +4,96 @@
 	> Mail: 1104306242@qq.com 
 	> Created Time: Fri 28 Jul 2017 04:53:00 PM CST
  ************************************************************************/
-#include <sys/socket.h>  
-#include <netinet/in.h>  
-#include <netinet/ip.h>  
-#include <netinet/ip_icmp.h>  
-#include <unistd.h>  
-#include <signal.h>  
-#include <arpa/inet.h>  
-#include <errno.h>  
-#include <sys/time.h>  
-#include <stdio.h>  
-#include <string.h> /* bzero */  
-#include <netdb.h>  
-#include <pthread.h> 
-//保存发送包的状态值  
-typedef struct pingm_packet
-{  
-	struct timeval tv_begin;     //发送时间  
-	struct timeval tv_end;       //接收到的时间  
-	short seq;                   //序列号  
-	int flag;          //1，表示已经发送但是没有接收到回应，0，表示接收到回应  
-}pingm_packet;  
+#include"ping.h"
 
-static pingm_packet *icmp_findpacket(int seq);  
-static unsigned short icmp_cksum(unsigned char *data, int len);  
-static struct timeval icmp_tvsub(struct timeval end, struct timeval begin);  
-static void icmp_statistics();  
-static void icmp_pack(struct icmp *icmph, int seq, struct timeval *tv,int length);  				
-static int icmp_unpack(char *buf,int len); 
-static void *icmp_send();
-static void *icmp_recv();  
-static void icmp_sigint(int signo); 
-static void icmp_usage();  
-
-
-static pingm_packet pingpacket[128];  
-#define K 1024  
-#define BUFFERSIZE 72                            //发送缓冲区的大小  
-static unsigned char send_buff[BUFFERSIZE];        
-static unsigned char recv_buff[2*K];             //防止接收溢出，设置大一些  
-static struct sockaddr_in dest;                  //目的地址  
-static int rawsock = 0;                          //发送和接收线程需要的socket描述符  
-static pid_t pid;                                //进程PID  
-static int alive = 0;                            //是否接收到退出信号  
-static short packet_send = 0;                    //已经发送的数据包数量  			
-static short packet_recv = 0;                    //已经接收的数据包数量  			
-static char dest_str[80];                        //目的主机字符串  
-static struct timeval tv_begin, tv_end, tv_interval; 
-
-
-
+//#include <sys/socket.h>  
+//#include <netinet/in.h>  
+//#include <netinet/ip.h>  
+//#include <netinet/ip_icmp.h>  
+//#include <unistd.h>  
+//#include <signal.h>  
+//#include <arpa/inet.h>  
+//#include <errno.h>  
+//#include <sys/time.h>  
+//#include <stdio.h>  
+//#include <string.h> 
+//#include <netdb.h>  
+//#include <pthread.h> 
+//
+////保存发送包的状态值  
+//typedef struct pingm_packet
+//{  
+//	struct timeval tv_begin;     //发送时间  
+//	struct timeval tv_end;       //接收到的时间  
+//	short seq;                   //序列号  
+//	int flag;          //1，表示已经发送但是没有接收到回应，0，表示接收到回应  
+//}pingm_packet;  
+//
+//
+//
+//#define K 1024 
+//#define BUFFSIZE 72
+//#define MAX 10000
+//static pingm_packet pingpacket[128];  
+//static unsigned char send_buff[BUFFSIZE];        
+//static unsigned char recv_buff[2*K];             //防止接收溢出，设置大一些  
+//static struct sockaddr_in dest;                  //目的地址  
+//static int rawsock = 0;                          //发送和接收线程需要的socket描述符  
+//static pid_t pid;                                //进程PID  
+//static int alive = 0;                            //是否接收到退出信号  
+//static short packet_send = 0;                    //已经发送的数据包数量  			
+//static short packet_recv = 0;                    //已经接收的数据包数量  			
+//static char dest_str[80];                        //目的主机字符串  
+//static struct timeval tv_begin, tv_end, tv_interval; 
+//static double tmp_rtt[MAX];      //用来保存时间
+//static double all_time=0;          //总的时间
+//static double min=0;             //最短时间
+//static double max=0;             //最大时间
+//static double avg=0;             //平均时间
+//static double mdev=0;            //算术平均差时间
+//
+//
+//pingm_packet *icmp_findpacket(int seq);  
+//unsigned short icmp_cksum(unsigned char *data, int len);  
+//struct timeval icmp_tvsub(struct timeval end, struct timeval begin);  
+//void icmp_statistics();  
+//void icmp_pack(struct icmp *icmph, int seq, struct timeval *tv,int length);  
+//int icmp_unpack(char *buf,int len); 
+//void *icmp_send();
+//void *icmp_recv();  
+//void icmp_sigint(int signo);  
+//void cal_rtt();
 
 void icmp_statistics()
 {
 	long time=(tv_interval.tv_sec *1000)+(tv_interval.tv_usec/1000);
+	cal_rtt();
 	printf("---%s ping statistics---\n",dest_str);
 	printf("%d packets transmitted,%d received,%d%c packet loss,time %ld ms.\n",\
 			packet_send,packet_recv,(packet_send-packet_recv)*100/packet_send,'%',time);
+	printf("rtt min/avg/max/mdev = %.3f/%.3f/%.3f/%.3f ms\n",min,avg,max,mdev);
 }
 
+void cal_rtt()
+{
+	double sum_avg=0;
+	int i=0;
+	min=max=tmp_rtt[0];
+	avg=all_time/(double)packet_recv;
+	for(i=0;i<(double)packet_recv;i++)
+	{
+		if(tmp_rtt[i]<min)
+			min=tmp_rtt[i];
+		if(tmp_rtt[i]>max)
+			max=tmp_rtt[i];
+
+		if((tmp_rtt[i]-avg)>0)
+			sum_avg+=tmp_rtt[i]-avg;
+		else
+			sum_avg+=avg-tmp_rtt[i];
+	}
+	mdev=sum_avg/packet_recv;
+}
 
 void icmp_sigint(int signo)
 {
@@ -86,6 +117,17 @@ pingm_packet *icmp_findpacket(int seq)
 			}
 		}
 	}
+	else if(seq>=0)
+	{
+		for(i=0;i<128;i++)
+		{
+			if(pingpacket[i].seq==seq)
+			{
+				found=&pingpacket[i];
+				break;
+			}
+		}
+	}
 	return found;
 }
 
@@ -94,13 +136,14 @@ struct timeval icmp_tvsub(struct timeval end,struct timeval begin)
 {
 	struct timeval tv;
 	tv.tv_sec=end.tv_sec-begin.tv_sec;
-	tv.tv_usec=end.tv_sec-begin.tv_usec;
+	tv.tv_usec=end.tv_usec-begin.tv_usec;
 
 	if(tv.tv_usec<0)
 	{
-		tv.tv_sec--;
+		tv.tv_sec-=1;
 		tv.tv_usec+=1000000;
 	}
+	return tv;
 }
 
 
@@ -135,13 +178,18 @@ void icmp_pack(struct icmp *icmp,int seq,struct timeval *tv,int length)
 	icmp->icmp_code=0;
 	icmp->icmp_cksum=0;
 	icmp->icmp_seq=seq;
-	icmp->icmp_id=pid;
+	icmp->icmp_id=pid & 0xffff;
 	for(i=0;i<length;i++)
 	{
 		icmp->icmp_data[i]=i;
 	}
 
 	icmp->icmp_cksum=icmp_cksum((unsigned char*)icmp,length);
+
+//	printf("send: type: %d, code: %d, sum: %d, seq: %d, id: %d\n", \
+			icmp->icmp_type, icmp->icmp_code, icmp->icmp_cksum, \
+			icmp->icmp_seq, icmp->icmp_id);
+//	fflush(stdout);
 }
 
 
@@ -163,6 +211,11 @@ int icmp_unpack(char *buf,int len)
 		return -1;
 	}
 
+//	printf("recv: type: %d, code: %d, sum: %d, seq: %d, id: %d\n",\
+			icmp->icmp_type, icmp->icmp_code, icmp->icmp_cksum,\
+			icmp->icmp_seq, icmp->icmp_id);
+
+//	fflush(stdout);
 	if((icmp->icmp_type==ICMP_ECHOREPLY)&&(icmp->icmp_id==pid))
 	{
 		struct timeval tv_interval;
@@ -172,17 +225,18 @@ int icmp_unpack(char *buf,int len)
 		pingm_packet *packet=icmp_findpacket(icmp->icmp_seq);
 		if(packet==NULL)
 			return -1;
-
+	
 		packet->flag=0;
 		tv_send=packet->tv_begin;
 
 		gettimeofday(&tv_recv,NULL);
 		tv_interval=icmp_tvsub(tv_recv,tv_send);
+		rtt=tv_interval.tv_sec*1000+tv_interval.tv_usec/1000;
 
-		rtt=tv_interval.tv_sec *1000+tv_interval.tv_usec/1000;
-
+		tmp_rtt[packet_recv]=rtt;
+		all_time+=rtt;
+		packet_recv++;
 		printf("%d byte from %s:icmp_seq=%u ttl=%d rtt=%d ms\n",len,inet_ntoa(ip->ip_src),icmp->icmp_seq,ip->ip_ttl,rtt);
-		packet_recv++;	
 	}
 	else
 		return -1;
@@ -237,30 +291,27 @@ void *icmp_recv()
 				break;
 			default:  //收到一个包
 				{
-	
-					int fromlem=0;
+					int fromlen=0;
 					struct sockaddr from;
-
 					int size=recv(rawsock,recv_buff,sizeof(recv_buff),0);
 					if(errno==EINTR)
 					{
 						perror("recv");
 						continue;
 					}
-
 					ret=icmp_unpack(recv_buff,size);
-					if(ret==1)
+					if(ret==-1)
 						continue;
 				}
-		}
 		break;
+		}
 	}
 }
 
 
 static void usage(char *proc)
 {
-	printf("%s[hostname|ip adress]",proc);
+	printf("%s[hostname | ip adress]",proc);
 }
 
 int main(int argc,char *argv[])
@@ -272,8 +323,10 @@ int main(int argc,char *argv[])
 	}
 	struct hostent *host=NULL;
 	struct protoent *protocol=NULL;
+	
 	int size=128*K;
 	protocol=getprotobyname("icmp");
+
 	if(protocol==NULL)
 	{
 		perror("getprotobyname");
@@ -281,8 +334,8 @@ int main(int argc,char *argv[])
 	}
 
 	memcpy(dest_str,argv[1],strlen(argv[1])+1);
-	memset(pingpacket,0,sizeof(pingpacket)*128); //??
-
+	memset(pingpacket,0,sizeof(pingm_packet)*128);
+	
 	rawsock=socket(AF_INET,SOCK_RAW,protocol->p_proto);
 	if(rawsock<0)
 	{
@@ -290,13 +343,12 @@ int main(int argc,char *argv[])
 		return 3;
 	}
 
-	pid=getuid();
-
+	pid=getpid();
 	setsockopt(rawsock,SOL_SOCKET,SO_RCVBUF,&size,sizeof(size)); //增大接收缓冲区
 	bzero(&dest,sizeof(&dest));
 	dest.sin_family=AF_INET;
 
-	int inaddr=inet_addr(argv[1]);
+	unsigned long  inaddr=inet_addr(argv[1]);
 	if(inaddr==INADDR_NONE)
 	{
 		host=gethostbyname(argv[1]);
