@@ -129,9 +129,12 @@ static int exe_cgi(int sock,const char *method,\
 		const char *path,const char *query_string)
 {
 	int content_len=-1;  
+	printf("hhhhh%s",method);
 	if(strcasecmp(method,"GET")==0)  
 	{
+		printf("hello");
 		drop_header(sock);
+		printf("wwww%s",query_string);
 	}
 	else   //POST ---> 开始处理post的报文信息
 	{
@@ -336,9 +339,10 @@ void *handler_request(void* arg)
 	{
 		if(*query_string=='?')
 		{
-			query_string='\0';
+			*query_string='\0';
 			query_string++;
 			cgi=1;	
+			printf("hehe\n");
 			break;
 		}
 		query_string++;
@@ -383,7 +387,7 @@ void *handler_request(void* arg)
 		else  //直接请求资源-->get
 		{
 		 	//printf("enter echo_www...\n");
-			printf("method:%s,url:%s,path:%s,cgi:%d,query_string:%s\n",method,url,path,cgi,query_string);
+			printf("wwwwwwmethod:%s,url:%s,path:%s,cgi:%d,query_string:%s\n",method,url,path,cgi,query_string);
 			drop_header(sock);
 			echo_www(sock,path,st.st_size);
 		}

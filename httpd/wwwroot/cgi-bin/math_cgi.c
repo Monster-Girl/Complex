@@ -38,7 +38,6 @@ void mymath(char *query_string)
 
 int main()
 {
-	printf("math_cgi\n");
 	char *method=getenv("METHOD");
 	char *query_string=NULL;
 	int content_len=-1;
