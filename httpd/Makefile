@@ -9,7 +9,8 @@ cc=gcc
 bin=httpd
 src=httpd.c main.c
 obj=$(shell echo $(src) | sed 's/\.c/\.o/g') 
-
+.PHONY:all
+all:$(bin) cgi
 $(bin):$(obj)
 	$(cc) -o $@ $^ $(LDFLAGS)
 %.o:%.c
@@ -24,9 +25,16 @@ cgi:
 .PHONY:clean
 clean:
 	rm *.o $(bin)
+	cd $(WWWROOT)/cgi-bin;\
+		make clean;\
+		cd -
+	cd $(SQL);\
+		make clean;\
+		cd -
+.PHONY:output
+output:
+	mkdir -p output/wwwroot/cgi-bin
+	mkdir -p output/conf
+	cp httpd output
+	cp math_cgi out/wwwroot/cgi-bin
 
-.PHONY:debug
-debug:
-	echo $(obj)
-	echo $(src)
-	echo $(ROOT_PATH)
