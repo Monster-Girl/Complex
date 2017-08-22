@@ -8,11 +8,59 @@ sqlAgi::sqlAgi()
 
 int sqlAgi::myConnect()
 {
-	if(mysql_real_connect(conn_fd,"127.0.0.1","root","123456","info",3306,NULL,0))
-		cout<<"connecct success"<<endl;
+	if(mysql_real_connect(conn_fd,"127.0.0.1","root","123456","cal",3306,NULL,CLIENT_MULTI_RESULTS | CLIENT_MULTI_STATEMENTS))
+		cout<<"connecct success"<< conn_fd << endl;
 	else
-	//	cout<<"connecct failed"<<endl;
-	perror("mysql_real_connect");
+		perror("mysql_real_connect");	
+}
+
+int sqlAgi::Find_Root(const string& name)
+{
+	string sql="select *from login where root='";
+	sql+=name;
+	sql+="'";
+	int ret=mysql_query(conn_fd,sql.c_str());
+	return ret;
+}
+
+int sqlAgi::Login(const string& name,const string& passwd)
+{
+	string sql="select *from login where root='";
+	sql+=name;
+	sql+="' and password='";
+	sql+=passwd;
+	sql+="';";
+	cout<<sql<<endl;
+	int ret=mysql_query(conn_fd,sql.c_str());
+	if(ret==0)
+		cout<<"login success"<<endl;
+	else
+		cout<<"name is not match password";
+}
+
+int sqlAgi::Insert_Login(const string& name,const string& passwd)
+{
+	/*
+	int query=Find_Root(name);
+	if(query!=0)
+	{
+		cout<<"用户已存在"<<endl;
+		return 0;
+	}
+	*/
+	string sql="insert into login(root,password) value('";
+	sql+=name;
+	sql+="','";
+	sql+=passwd;
+	sql+="')";
+
+	cout<<sql<<endl;
+	int ret=mysql_query(conn_fd,sql.c_str());
+	cout << "fd:" << conn_fd << endl;
+	if(ret!=0)
+		cout<<"insert failed:"<< ret << endl;
+	else 
+		cout << "insert ok" << endl;
 }
 
 int sqlAgi::myInsert(const string& name,const string& sex,const string& age,\
@@ -38,7 +86,7 @@ int sqlAgi::myInsert(const string& name,const string& sex,const string& age,\
 
 int sqlAgi::mySelect()
 {
-	string sql="select * from st_info";
+	string sql="select * from login";
 	if(mysql_query(conn_fd,sql.c_str())==0)
 	{
 		MYSQL_RES *res=mysql_store_result(conn_fd);
