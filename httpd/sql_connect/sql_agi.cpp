@@ -9,7 +9,7 @@ sqlAgi::sqlAgi()
 int sqlAgi::myConnect()
 {
 	if(mysql_real_connect(conn_fd,"127.0.0.1","root","123456","cal",3306,NULL,CLIENT_MULTI_RESULTS | CLIENT_MULTI_STATEMENTS))
-		cout<<"connecct success"<< conn_fd << endl;
+		cout<<"connecct success"<< endl;
 	else
 		perror("mysql_real_connect");	
 }
@@ -19,8 +19,30 @@ int sqlAgi::Find_Root(const string& name)
 	string sql="select *from login where root='";
 	sql+=name;
 	sql+="'";
-	int ret=mysql_query(conn_fd,sql.c_str());
-	return ret;
+	if(mysql_query(conn_fd,sql.c_str())==0)
+	{
+		MYSQL_RES *res=mysql_store_result(conn_fd);
+		if(!res)
+		{
+			cout<<"select root failed"<<endl;
+		}
+		else
+		{
+			int col=mysql_num_fields(res);
+			int row=mysql_num_rows(res);
+			MYSQL_ROW lines;
+			int i=0;
+			for(;i<row;i++)
+			{
+				lines=mysql_fetch_row(res);
+				string tmp=lines[i];
+				cout<<tmp<<endl;
+				if(strcasecmp(tmp.c_str(),name.c_str())==0)
+					return -1;
+			}
+			return 0;
+		}
+	}
 }
 
 int sqlAgi::Login(const string& name,const string& passwd)
@@ -40,14 +62,13 @@ int sqlAgi::Login(const string& name,const string& passwd)
 
 int sqlAgi::Insert_Login(const string& name,const string& passwd)
 {
-	/*
-	int query=Find_Root(name);
-	if(query!=0)
+	int tmp=Find_Root(name);
+	if(tmp!=0)
 	{
-		cout<<"用户已存在"<<endl;
+		cout<<"root has login"<<endl;
 		return 0;
 	}
-	*/
+
 	string sql="insert into login(root,password) value('";
 	sql+=name;
 	sql+="','";
@@ -100,7 +121,7 @@ int sqlAgi::mySelect()
 			int col=mysql_num_fields(res);
 			MYSQL_FIELD *fd;
 			for(;fd=mysql_fetch_field(res);)
-			{
+			{				
 				cout.setf(ios::left);
 				cout.width(9);
 				cout<<fd->name<<" ";

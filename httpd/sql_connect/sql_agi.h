@@ -4,6 +4,7 @@
 #include<mysql.h>
 #include<stdio.h>
 #include<string.h>
+#include<string>
 class sqlAgi
 {
 	public:
