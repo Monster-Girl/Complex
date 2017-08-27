@@ -4,7 +4,7 @@ void select(const char *string_arg)
 {
 	sqlAgi mydb;
 	mydb.myConnect();
-	mydb.mySelect();
+	//mydb.mySelect();
 }
 
 int main()

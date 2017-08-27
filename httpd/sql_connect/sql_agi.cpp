@@ -84,19 +84,20 @@ int sqlAgi::Insert_Login(const string& name,const string& passwd)
 		cout << "insert ok" << endl;
 }
 
-int sqlAgi::myInsert(const string& name,const string& sex,const string& age,\
-		const string& hobby,const string& school)
+int sqlAgi::myInsert(const string& company,const string& post,const string& online,const string& written,const string& delivery,const string& remarks)
 {
-	string sql="insert into st_info(name,sex,age,hobby,school) value('";
-	sql+=name;
+	string sql="insert into hr_info(company,post,online_application,written_exam,delivery,remarks) value('";
+	sql+=company;
 	sql+="','";
-	sql+=sex;
+	sql+=post;
 	sql+="','";
-	sql+=age;
+	sql+=online;
 	sql+="','";
-	sql+=hobby;
+	sql+=written;
 	sql+="','";
-	sql+=school;
+	sql+=delivery;
+	sql+="','";
+	sql+=remarks;
 	sql+="')";
 
 	cout<<sql<<endl;
@@ -105,9 +106,10 @@ int sqlAgi::myInsert(const string& name,const string& sex,const string& age,\
 		cout<<"insert failed"<<endl;
 }
 
-int sqlAgi::mySelect()
+int sqlAgi::mySelect(const string& tables)
 {
-	string sql="select * from login";
+	string sql="select * from ";
+	sql+=tables;
 	if(mysql_query(conn_fd,sql.c_str())==0)
 	{
 		MYSQL_RES *res=mysql_store_result(conn_fd);

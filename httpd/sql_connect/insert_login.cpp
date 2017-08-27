@@ -12,6 +12,6 @@ int main()
 	sqlAgi mydb;
 	mydb.myConnect();
 	mydb.Insert_Login("hello","111111");
-	mydb.mySelect();
+	mydb.mySelect("login");
 	return 0;
 }
