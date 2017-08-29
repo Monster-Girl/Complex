@@ -9,7 +9,7 @@ sqlAgi::sqlAgi()
 int sqlAgi::myConnect()
 {
 	if(mysql_real_connect(conn_fd,"127.0.0.1","root","123456","cal",3306,NULL,CLIENT_MULTI_RESULTS | CLIENT_MULTI_STATEMENTS))
-		cout<<"connecct success"<< endl;
+		;
 	else
 		perror("mysql_real_connect");	
 }
@@ -51,13 +51,18 @@ int sqlAgi::Login(const string& name,const string& passwd)
 	sql+=name;
 	sql+="' and password='";
 	sql+=passwd;
-	sql+="';";
+	sql+="'";
 	cout<<sql<<endl;
-	int ret=mysql_query(conn_fd,sql.c_str());
-	if(ret==0)
-		cout<<"login success"<<endl;
-	else
-		cout<<"name is not match password";
+	if(mysql_query(conn_fd,sql.c_str())==0)
+	{
+		MYSQL_RES *res=mysql_store_result(conn_fd);
+		//res肯定不会为空，因为还有表头信息存在
+		MYSQL_ROW tmp = mysql_fetch_row(res);
+		if(tmp==NULL)
+			cout<<"name is not match with passwd"<<endl;
+		else
+			cout<<"login success"<<endl;
+	}
 }
 
 int sqlAgi::Insert_Login(const string& name,const string& passwd)
@@ -112,7 +117,7 @@ int sqlAgi::mySelect(const string& tables)
 	sql+=tables;
 	if(mysql_query(conn_fd,sql.c_str())==0)
 	{
-		MYSQL_RES *res=mysql_store_result(conn_fd);
+		MYSQL_RES *res=mysql_store_result(conn_fd);	
 		if(!res)
 		{
 			cout<<"select failed!\n"<<endl;

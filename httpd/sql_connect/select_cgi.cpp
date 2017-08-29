@@ -4,7 +4,7 @@ void select(const char *string_arg)
 {
 	sqlAgi mydb;
 	mydb.myConnect();
-	//mydb.mySelect();
+	mydb.mySelect("hr_info");
 }
 
 int main()
@@ -37,7 +37,6 @@ int main()
 	}
 
 	select(string_arg);
-
 	//sqlAgi mydb;
 	//mydb.myConnect();
 	//mydb.mySelect();

@@ -129,12 +129,11 @@ static int exe_cgi(int sock,const char *method,\
 		const char *path,const char *query_string)
 {
 	int content_len=-1;  
-	printf("hhhhh%s",method);
 	if(strcasecmp(method,"GET")==0)  
 	{
 		printf("hello");
 		drop_header(sock);
-		printf("wwww%s",query_string);
+		printf("sql_connect/www_root%s",query_string);
 	}
 	else   //POST ---> 开始处理post的报文信息
 	{
@@ -305,7 +304,6 @@ void *handler_request(void* arg)
 	}
 
 	method[i]='\0';
-	//if(strcasecmp(method,"GET") && strcasecmp(method,"POST"))  //判断method是否需要处理
 	if(strcasecmp(method,"GET") && strcasecmp(method,"POST"))  //判断method是否需要处理
 	{
 		echo_string(sock);
@@ -349,7 +347,7 @@ void *handler_request(void* arg)
 	}
 	
 	printf("url---->%s\n",url);	
-	sprintf(path,"wwwroot%s",url);
+	sprintf(path,"sql_connect%s",url);
 	
 	if(path[strlen(path)-1]=='/') //请求目录为‘/’
 	{
@@ -361,7 +359,6 @@ void *handler_request(void* arg)
 	if(stat(path,&st)!=0)
 	{
 		echo_string(sock);
-		printf("stat\n");
 		ret=7;
 		goto end;
 	}
@@ -370,7 +367,6 @@ void *handler_request(void* arg)
 		if(S_ISDIR(st.st_mode))
 		{
 			strcat(path,"/index.html");
-			printf("strcat\n");
 		}
 		else if((st.st_mode & S_IXUSR)||(st.st_mode & S_IXGRP)||(st.st_mode & S_IXOTH))
 		{
@@ -386,7 +382,6 @@ void *handler_request(void* arg)
 		}
 		else  //直接请求资源-->get
 		{
-		 	//printf("enter echo_www...\n");
 			printf("wwwwwwmethod:%s,url:%s,path:%s,cgi:%d,query_string:%s\n",method,url,path,cgi,query_string);
 			drop_header(sock);
 			echo_www(sock,path,st.st_size);
