@@ -231,6 +231,9 @@ void *icmp_recv()
 		FD_ZERO(&readfd);
 		FD_SET(rawsock,&readfd);
 		ret=select(rawsock+1,&readfd,NULL,NULL,&tv);
+		//select用途是为了管理tv，每发一次请求75秒
+		//我们只是判断是否在，所以自己设置了时间
+		//用select来管理
 		switch(ret)
 		{
 			case -1: //发生错误
