@@ -61,7 +61,15 @@ int sqlAgi::Login(const string& name,const string& passwd)
 		if(tmp==NULL)
 			cout<<"name is not match with passwd"<<endl;
 		else
-			cout<<"login success"<<endl;
+			//cout<<"login success"<<endl;
+	{
+		cout<<"sucess";
+		<html>
+			<body>
+			<title>ing</title>
+			<script language='javascript'>document.location='http://www.baidu.com/' </script>
+			</body>
+		</html>
 	}
 }
 
